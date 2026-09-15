@@ -31,7 +31,6 @@ public class HologramManager {
     public HologramManager(un.breaking.lootBoxes.LootCrates plugin) {
         this.plugin = plugin;
         this.dataFile = new File(plugin.getDataFolder(), "crate_locations.yml");
-        this.loadHolograms();
     }
 
     public void createHologram(Location blockLocation, String crateId) {
@@ -107,7 +106,7 @@ public class HologramManager {
 
     }
 
-    private void loadHolograms() {
+    public void loadHolograms() {
         if (!this.dataFile.exists()) {
             try {
                 this.dataFile.getParentFile().mkdirs();
