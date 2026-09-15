@@ -204,10 +204,10 @@ public class CratePlaceListener implements Listener {
                                             this.plugin.getHistoryManager().addEntry(player.getUniqueId(), crateId, rewardName, wonItem.getAmount());
                                             int broadcastThreshold = this.plugin.getConfig().getInt("settings.broadcast-rarity-threshold", 5);
                                             if (this.plugin.getConfig().getBoolean("settings.broadcast-legendary", true) && (reward.getWeight() <= broadcastThreshold || crateId.toLowerCase().contains("legendary") || crateId.toLowerCase().contains("mythic"))) {
-                                                String broadcast = this.plugin.getMessage("legendary-broadcast").replace("%player%", player.getName()).replace("%reward%", rewardDisplay).replace("%crate%", crate.getDisplayName());
+                                                String broadcast = var12 + this.plugin.getMessage("legendary-broadcast").replace("%player%", player.getName()).replace("%reward%", rewardDisplay).replace("%crate%", crate.getDisplayName());
 
+                                                Component fullmsg = LegacyComponentSerializer.legacyAmpersand().deserialize(broadcast);
                                                 for(Player online : Bukkit.getOnlinePlayers()) {
-                                                    var12 = this.plugin.getPrefix();
                                                     online.sendMessage(var12 + broadcast);
                                                 }
                                             }
