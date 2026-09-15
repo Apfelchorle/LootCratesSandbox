@@ -42,6 +42,7 @@ public class LootCrates extends JavaPlugin {
         this.historyManager = new HistoryManager(this);
         this.hologramManager = new HologramManager(this);
         this.hologramManager.loadHolograms();
+        this.hologramManager.purgeOrphans();
         this.crateEditGUI = new CrateEditGUI(this);
         this.animationManager = new CrateAnimationManager(this);
         this.getCommand("lootcrate").setExecutor(new LootCrateCommand(this));

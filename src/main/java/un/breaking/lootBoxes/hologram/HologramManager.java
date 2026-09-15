@@ -6,13 +6,6 @@
 package un.breaking.lootBoxes.hologram;
 
 
-import java.io.File;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.configuration.file.FileConfiguration;
@@ -20,7 +13,10 @@ import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.ArmorStand;
 import org.bukkit.entity.EntityType;
 import un.breaking.lootBoxes.LootCrates;
-import un.breaking.lootBoxes.models.CustomCrate;
+
+import java.io.File;
+import java.io.IOException;
+import java.util.*;
 
 public class HologramManager {
     private final un.breaking.lootBoxes.LootCrates plugin;
@@ -40,12 +36,12 @@ public class HologramManager {
             World world = blockLocation.getWorld();
             if (world != null) {
                 List<ArmorStand> stands = new ArrayList();
-                Location hologramLoc = blockLocation.clone().add((double)0.5F, (double)2.5F, (double)0.5F);
+                Location hologramLoc = blockLocation.clone().add(0.5F, 2.5F, 0.5F);
                 ArmorStand line1 = this.createArmorStand(hologramLoc, un.breaking.lootBoxes.LootCrates.colorize(crate.getHologramLine1()));
                 stands.add(line1);
-                ArmorStand line2 = this.createArmorStand(hologramLoc.clone().subtract((double)0.0F, 0.3, (double)0.0F), LootCrates.colorize(crate.getHologramLine2()));
+                ArmorStand line2 = this.createArmorStand(hologramLoc.clone().subtract(0.0F, 0.3, 0.0F), LootCrates.colorize(crate.getHologramLine2()));
                 stands.add(line2);
-                ArmorStand line3 = this.createArmorStand(hologramLoc.clone().subtract((double)0.0F, 0.6, (double)0.0F), LootCrates.colorize(crate.getHologramLine3()));
+                ArmorStand line3 = this.createArmorStand(hologramLoc.clone().subtract(0.0F, 0.6, 0.0F), LootCrates.colorize(crate.getHologramLine3()));
                 stands.add(line3);
                 CrateHologram hologram = new CrateHologram(blockLocation, crateId, stands);
                 this.holograms.put(blockLocation, hologram);
@@ -69,7 +65,7 @@ public class HologramManager {
     }
 
     public void removeHologram(Location blockLocation) {
-        CrateHologram hologram = (CrateHologram)this.holograms.remove(blockLocation);
+        CrateHologram hologram = this.holograms.remove(blockLocation);
         if (hologram != null) {
             hologram.remove();
             this.saveHolograms();
@@ -78,7 +74,7 @@ public class HologramManager {
     }
 
     public CrateHologram getHologram(Location location) {
-        return (CrateHologram)this.holograms.get(location);
+        return this.holograms.get(location);
     }
 
     public boolean isCrateLocation(Location location) {
@@ -86,7 +82,7 @@ public class HologramManager {
     }
 
     public String getCrateIdAt(Location location) {
-        CrateHologram hologram = (CrateHologram)this.holograms.get(location);
+        CrateHologram hologram = this.holograms.get(location);
         return hologram != null ? hologram.getCrateId() : null;
     }
 
@@ -94,8 +90,8 @@ public class HologramManager {
         List<Location> locations = new ArrayList();
 
         for(Map.Entry<Location, CrateHologram> entry : this.holograms.entrySet()) {
-            if (((CrateHologram)entry.getValue()).getCrateId().equals(crateId)) {
-                locations.add((Location)entry.getKey());
+            if (entry.getValue().getCrateId().equals(crateId)) {
+                locations.add(entry.getKey());
             }
         }
 
@@ -150,8 +146,8 @@ public class HologramManager {
         int index = 0;
 
         for(Map.Entry<Location, CrateHologram> entry : this.holograms.entrySet()) {
-            Location loc = (Location)entry.getKey();
-            CrateHologram hologram = (CrateHologram)entry.getValue();
+            Location loc = entry.getKey();
+            CrateHologram hologram = entry.getValue();
             String path = "crates." + index;
             this.dataConfig.set(path + ".world", loc.getWorld().getName());
             this.dataConfig.set(path + ".x", loc.getBlockX());
@@ -167,6 +163,52 @@ public class HologramManager {
             this.plugin.getLogger().severe("Could not save crate_locations.yml");
         }
 
+    }
+
+    public void purgeOrphans() {
+        if (!this.dataFile.exists()) return;
+        YamlConfiguration loadedConfig = YamlConfiguration.loadConfiguration(this.dataFile);
+        if (!loadedConfig.contains("crates")) return;
+
+        int removed = 0;
+        for (String key : loadedConfig.getConfigurationSection("crates").getKeys(false)) {
+            String path = "crates." + key;
+            String worldName = loadedConfig.getString(path + ".world");
+            double x = loadedConfig.getDouble(path + ".x");
+            double y = loadedConfig.getDouble(path + ".y");
+            double z = loadedConfig.getDouble(path + ".z");
+
+            if (worldName == null) {
+                plugin.getLogger().warning("WorldName is NULL: KEY: " + key + " WORLD NAME: " + worldName);
+            }
+
+            World world = this.plugin.getServer().getWorld(worldName);
+            if (world == null) continue;
+
+            Location loc = new Location(world, x, y, z);
+            Location center = loc.clone().add(0.5, 2.0, 0.5);
+
+            for (org.bukkit.entity.Entity e : world.getNearbyEntities(center, 1.0, 2.0, 1.0)) {
+                if (e.getType() == org.bukkit.entity.EntityType.ARMOR_STAND) {
+                    org.bukkit.entity.ArmorStand stand = (org.bukkit.entity.ArmorStand) e;
+
+                    boolean isTracked = false;
+                    for (CrateHologram h : this.holograms.values()) {
+                        if (h.getArmorStands().contains(stand)) {
+                            isTracked = true;
+                            break;
+                        }
+                    }
+
+                    if (!isTracked && stand.isMarker() && stand.isInvisible()) {
+                        stand.remove();
+                        removed++;
+                    }
+                }
+            }
+        }
+
+        this.plugin.getLogger().info("Purged " + removed + " orphaned crate hologram armor stand(s).");
     }
 
     public void removeAllHolograms() {
