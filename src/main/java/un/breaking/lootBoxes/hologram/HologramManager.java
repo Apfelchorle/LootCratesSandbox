@@ -116,16 +116,17 @@ public class HologramManager {
             }
 
         } else {
-            this.dataConfig = YamlConfiguration.loadConfiguration(this.dataFile);
-            if (this.dataConfig.contains("crates")) {
-                for(String key : this.dataConfig.getConfigurationSection("crates").getKeys(false)) {
+            YamlConfiguration loadedConfig = YamlConfiguration.loadConfiguration(this.dataFile);
+            this.dataConfig = loadedConfig;
+            if (loadedConfig.contains("crates")) {
+                for(String key : loadedConfig.getConfigurationSection("crates").getKeys(false)) {
                     try {
                         String path = "crates." + key;
-                        String worldName = this.dataConfig.getString(path + ".world");
-                        double x = this.dataConfig.getDouble(path + ".x");
-                        double y = this.dataConfig.getDouble(path + ".y");
-                        double z = this.dataConfig.getDouble(path + ".z");
-                        String crateId = this.dataConfig.getString(path + ".crate-id");
+                        String worldName = loadedConfig.getString(path + ".world");
+                        double x = loadedConfig.getDouble(path + ".x");
+                        double y = loadedConfig.getDouble(path + ".y");
+                        double z = loadedConfig.getDouble(path + ".z");
+                        String crateId = loadedConfig.getString(path + ".crate-id");
                         World world = this.plugin.getServer().getWorld(worldName);
                         if (world != null) {
                             Location loc = new Location(world, x, y, z);
@@ -135,6 +136,7 @@ public class HologramManager {
                         }
                     } catch (Exception var15) {
                         this.plugin.getLogger().warning("Failed to load crate hologram: " + key);
+                        var15.printStackTrace();
                     }
                 }
 
