@@ -4,10 +4,9 @@
 //
 
 package un.breaking.lootBoxes.listeners;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-import java.util.UUID;
+
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
 import org.bukkit.Location;
@@ -32,6 +31,11 @@ import org.bukkit.inventory.ItemStack;
 import un.breaking.lootBoxes.LootCrates;
 import un.breaking.lootBoxes.managers.RewardManager;
 import un.breaking.lootBoxes.models.CustomCrate;
+
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.UUID;
 
 public class CratePlaceListener implements Listener {
     private final LootCrates plugin;
@@ -187,13 +191,16 @@ public class CratePlaceListener implements Listener {
                                                 String var10001 = this.plugin.getPrefix();
                                                 player.sendMessage(var10001 + LootCrates.colorize("&eInventory full! Dropped on ground."));
                                             } else {
-                                                player.getInventory().addItem(new ItemStack[]{wonItem});
+                                                player.getInventory().addItem(wonItem);
                                             }
 
                                             String rewardName = reward.getDisplayName();
                                             String rewardDisplay = rewardName + " &rx" + wonItem.getAmount();
                                             String var12 = this.plugin.getPrefix();
-                                            player.sendMessage(var12 + this.plugin.getMessage("reward-won").replace("%reward%", rewardDisplay));
+                                            String rawmsg = this.plugin.getMessage("reward-won");
+                                            String formattedRaw = rawmsg.replace("%reward%", rewardDisplay);
+                                            Component Rewardmsg = LegacyComponentSerializer.legacyAmpersand().deserialize(var12 + formattedRaw);
+                                            player.sendMessage(Rewardmsg);
                                             this.plugin.getHistoryManager().addEntry(player.getUniqueId(), crateId, rewardName, wonItem.getAmount());
                                             int broadcastThreshold = this.plugin.getConfig().getInt("settings.broadcast-rarity-threshold", 5);
                                             if (this.plugin.getConfig().getBoolean("settings.broadcast-legendary", true) && (reward.getWeight() <= broadcastThreshold || crateId.toLowerCase().contains("legendary") || crateId.toLowerCase().contains("mythic"))) {
