@@ -39,7 +39,7 @@ import java.util.UUID;
 
 public class CratePlaceListener implements Listener {
     private final LootCrates plugin;
-    private final Set<UUID> openingCrate = new HashSet();
+    private final Set<UUID> openingCrate = new HashSet<>();
 
     public CratePlaceListener(LootCrates plugin) {
         this.plugin = plugin;
@@ -208,7 +208,7 @@ public class CratePlaceListener implements Listener {
 
                                                 Component fullmsg = LegacyComponentSerializer.legacyAmpersand().deserialize(broadcast);
                                                 for(Player online : Bukkit.getOnlinePlayers()) {
-                                                    online.sendMessage(var12 + broadcast);
+                                                    online.sendMessage(fullmsg);
                                                 }
                                             }
 
