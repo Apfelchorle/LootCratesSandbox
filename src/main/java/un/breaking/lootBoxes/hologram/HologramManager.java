@@ -168,7 +168,10 @@ public class HologramManager {
     public void purgeOrphans() {
         if (!this.dataFile.exists()) return;
         YamlConfiguration loadedConfig = YamlConfiguration.loadConfiguration(this.dataFile);
-        if (!loadedConfig.contains("crates")) return;
+        if (!loadedConfig.contains("crates")) {
+            plugin.getLogger().warning("loadedconfig doesnt contain crates");
+            return;
+        }
 
         int removed = 0;
         for (String key : loadedConfig.getConfigurationSection("crates").getKeys(false)) {
@@ -178,23 +181,23 @@ public class HologramManager {
             double y = loadedConfig.getDouble(path + ".y");
             double z = loadedConfig.getDouble(path + ".z");
 
-            if (worldName == null) {
-                plugin.getLogger().warning("WorldName is NULL: KEY: " + key + " WORLD NAME: " + worldName);
-            }
-
             World world = this.plugin.getServer().getWorld(worldName);
-            if (world == null) continue;
+            if (world == null) {
+                plugin.getLogger().warning("WorldName is NULL: KEY: " + key + " WORLD NAME: " + worldName);
+                continue;
+            }
 
             Location loc = new Location(world, x, y, z);
             Location center = loc.clone().add(0.5, 2.0, 0.5);
 
-            for (org.bukkit.entity.Entity e : world.getNearbyEntities(center, 1.0, 2.0, 1.0)) {
+            for (org.bukkit.entity.Entity e : world.getNearbyEntities(center, 16.0, 16.0, 16.0)) {
                 if (e.getType() == org.bukkit.entity.EntityType.ARMOR_STAND) {
                     org.bukkit.entity.ArmorStand stand = (org.bukkit.entity.ArmorStand) e;
 
                     boolean isTracked = false;
                     for (CrateHologram h : this.holograms.values()) {
                         if (h.getArmorStands().contains(stand)) {
+                            plugin.getLogger().warning(stand.getName() + " is tracked.");
                             isTracked = true;
                             break;
                         }
