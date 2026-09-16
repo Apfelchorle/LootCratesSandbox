@@ -5,6 +5,7 @@
 
 package un.breaking.lootBoxes;
 
+import org.bukkit.Bukkit;
 import org.bukkit.plugin.java.JavaPlugin;
 import un.breaking.lootBoxes.animation.CrateAnimationManager;
 import un.breaking.lootBoxes.commands.LootCrateAdminCommand;
@@ -37,12 +38,17 @@ public class LootCrates extends JavaPlugin {
         this.saveDefaultConfig();
         this.dataManager = new DataManager(this);
         this.customCrateManager = new CustomCrateManager(this);
-        this.customCrateManager.loadCrates();
         this.rewardManager = new RewardManager(this);
         this.historyManager = new HistoryManager(this);
         this.hologramManager = new HologramManager(this);
-        this.hologramManager.loadHolograms();
-        this.hologramManager.purgeOrphans();
+
+// purge before load
+        Bukkit.getScheduler().runTask(this, () -> {
+            this.hologramManager.purgeOrphans();
+            this.hologramManager.loadHolograms();
+        });
+
+
         this.crateEditGUI = new CrateEditGUI(this);
         this.animationManager = new CrateAnimationManager(this);
         this.getCommand("lootcrate").setExecutor(new LootCrateCommand(this));

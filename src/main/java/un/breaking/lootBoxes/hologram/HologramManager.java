@@ -53,6 +53,7 @@ public class HologramManager {
 
     private ArmorStand createArmorStand(Location location, String name) {
         ArmorStand stand = (ArmorStand)location.getWorld().spawnEntity(location, EntityType.ARMOR_STAND);
+        stand.addScoreboardTag("lootcrates_holo");
         stand.setCustomName(name);
         stand.setCustomNameVisible(true);
         stand.setGravity(false);
@@ -87,7 +88,7 @@ public class HologramManager {
     }
 
     public void refreshHolograms(String crateId) {
-        List<Location> locations = new ArrayList();
+        List<Location> locations = new ArrayList<>();
 
         for(Map.Entry<Location, CrateHologram> entry : this.holograms.entrySet()) {
             if (entry.getValue().getCrateId().equals(crateId)) {
@@ -188,25 +189,16 @@ public class HologramManager {
             }
 
             Location loc = new Location(world, x, y, z);
+            world.getChunkAt(loc).load();
             Location center = loc.clone().add(0.5, 2.0, 0.5);
 
-            for (org.bukkit.entity.Entity e : world.getNearbyEntities(center, 16.0, 16.0, 16.0)) {
+            for (org.bukkit.entity.Entity e : world.getNearbyEntities(center, 2.0, 4.0, 2.0)) {
                 if (e.getType() == org.bukkit.entity.EntityType.ARMOR_STAND) {
                     org.bukkit.entity.ArmorStand stand = (org.bukkit.entity.ArmorStand) e;
 
-                    boolean isTracked = false;
-                    for (CrateHologram h : this.holograms.values()) {
-                        if (h.getArmorStands().contains(stand)) {
-                            plugin.getLogger().warning(stand.getName() + " is tracked.");
-                            isTracked = true;
-                            break;
-                        }
-                    }
-
-                    if (!isTracked && stand.isMarker() && stand.isInvisible()) {
-                        stand.remove();
-                        removed++;
-                    }
+                    if (!stand.getScoreboardTags().contains("lootcrates_holo")) continue;
+                    stand.remove();
+                    removed++;
                 }
             }
         }
