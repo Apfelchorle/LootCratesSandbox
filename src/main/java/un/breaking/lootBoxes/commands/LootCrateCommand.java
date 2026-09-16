@@ -6,6 +6,8 @@
 package un.breaking.lootBoxes.commands;
 
 
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
@@ -82,8 +84,10 @@ public class LootCrateCommand implements CommandExecutor, TabCompleter {
                 String var10 = this.plugin.getPrefix();
                 player.sendMessage(var10 + LootCrates.colorize("&cNo crates configured!"));
             } else {
+                int amount = this.plugin.getConfig().getInt("daily-reward.amount-key", 1);
+                String amount_string = String.valueOf(amount);
                 ItemStack crateItem = crate.createCrateItem(1);
-                ItemStack keyItem = crate.createKeyItem(this.plugin.getConfig().getInt("daily-reward.amount-key", 1));
+                ItemStack keyItem = crate.createKeyItem(amount);
                 if (player.getInventory().firstEmpty() == -1) {
                     String var9 = this.plugin.getPrefix();
                     player.sendMessage(var9 + LootCrates.colorize("&cYour inventory is full!"));
@@ -96,7 +100,9 @@ public class LootCrateCommand implements CommandExecutor, TabCompleter {
                     var10001 = this.plugin.getPrefix();
 //                    player.sendMessage(var10001 + this.plugin.getMessage("crate-received").replace("%crate%", crate.getDisplayName()));
                     var10001 = this.plugin.getPrefix();
-                    player.sendMessage(var10001 + this.plugin.getMessage("key-received").replace("%amount%", "1").replace("%key%", crate.getKeyName()));
+                    String rawmsg = this.plugin.getMessage("key-received").replace("%amount%", amount_string).replace("%key%", crate.getKeyName());
+                    Component coloredmsg = LegacyComponentSerializer.legacySection().deserialize(rawmsg);
+                    player.sendMessage(var10001 + coloredmsg);
                 }
             }
         }
