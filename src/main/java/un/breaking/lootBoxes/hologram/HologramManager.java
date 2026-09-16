@@ -198,6 +198,7 @@ public class HologramManager {
 
                     if (!stand.getScoreboardTags().contains("lootcrates_holo")) continue;
                     stand.remove();
+                    this.plugin.getLogger().info("Purging Orphaned " + stand.getName());
                     removed++;
                 }
             }
