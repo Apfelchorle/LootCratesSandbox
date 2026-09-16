@@ -6,10 +6,6 @@
 package un.breaking.lootBoxes.commands;
 
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.stream.Collectors;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
@@ -19,6 +15,11 @@ import org.bukkit.inventory.ItemStack;
 import un.breaking.lootBoxes.LootCrates;
 import un.breaking.lootBoxes.models.CustomCrate;
 import un.breaking.lootBoxes.models.HistoryEntry;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.stream.Collectors;
 
 public class LootCrateCommand implements CommandExecutor, TabCompleter {
     private final LootCrates plugin;
@@ -74,7 +75,7 @@ public class LootCrateCommand implements CommandExecutor, TabCompleter {
             String crateId = this.plugin.getConfig().getString("daily-reward.reward-crate", "common");
             CustomCrate crate = this.plugin.getCustomCrateManager().getCrate(crateId);
             if (crate == null && !this.plugin.getCustomCrateManager().getAllCrates().isEmpty()) {
-                crate = (CustomCrate)this.plugin.getCustomCrateManager().getAllCrates().iterator().next();
+                crate = this.plugin.getCustomCrateManager().getAllCrates().iterator().next();
             }
 
             if (crate == null) {
@@ -82,18 +83,18 @@ public class LootCrateCommand implements CommandExecutor, TabCompleter {
                 player.sendMessage(var10 + LootCrates.colorize("&cNo crates configured!"));
             } else {
                 ItemStack crateItem = crate.createCrateItem(1);
-                ItemStack keyItem = crate.createKeyItem(1);
+                ItemStack keyItem = crate.createKeyItem(this.plugin.getConfig().getInt("daily-reward.amount-key", 1));
                 if (player.getInventory().firstEmpty() == -1) {
                     String var9 = this.plugin.getPrefix();
                     player.sendMessage(var9 + LootCrates.colorize("&cYour inventory is full!"));
                 } else {
-                    player.getInventory().addItem(new ItemStack[]{crateItem});
-                    player.getInventory().addItem(new ItemStack[]{keyItem});
+//                    player.getInventory().addItem(new ItemStack[]{crateItem});
+                    player.getInventory().addItem(keyItem);
                     this.plugin.getDataManager().setDailyCooldown(player.getUniqueId(), System.currentTimeMillis());
                     String var10001 = this.plugin.getPrefix();
                     player.sendMessage(var10001 + this.plugin.getMessage("daily-claimed"));
                     var10001 = this.plugin.getPrefix();
-                    player.sendMessage(var10001 + this.plugin.getMessage("crate-received").replace("%crate%", crate.getDisplayName()));
+//                    player.sendMessage(var10001 + this.plugin.getMessage("crate-received").replace("%crate%", crate.getDisplayName()));
                     var10001 = this.plugin.getPrefix();
                     player.sendMessage(var10001 + this.plugin.getMessage("key-received").replace("%amount%", "1").replace("%key%", crate.getKeyName()));
                 }
@@ -129,7 +130,7 @@ public class LootCrateCommand implements CommandExecutor, TabCompleter {
                 player.sendMessage(var10001 + this.plugin.getMessage("history-header") + LootCrates.colorize(" &7(Page " + page + "/" + totalPages + ")"));
 
                 for(int i = startIndex; i < endIndex; ++i) {
-                    HistoryEntry entry = (HistoryEntry)history.get(i);
+                    HistoryEntry entry = history.get(i);
                     CustomCrate crate = this.plugin.getCustomCrateManager().getCrate(entry.getCrateId());
                     String crateName = crate != null ? crate.getDisplayName() : entry.getCrateId();
                     String var10000 = this.plugin.getMessage("history-entry").replace("%date%", entry.getFormattedDate()).replace("%tier%", crateName);
@@ -162,6 +163,6 @@ public class LootCrateCommand implements CommandExecutor, TabCompleter {
     }
 
     private List<String> filterCompletions(List<String> completions, String input) {
-        return (List)completions.stream().filter((s) -> s.toLowerCase().startsWith(input.toLowerCase())).collect(Collectors.toList());
+        return completions.stream().filter((s) -> s.toLowerCase().startsWith(input.toLowerCase())).collect(Collectors.toList());
     }
 }
