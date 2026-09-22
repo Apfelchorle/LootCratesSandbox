@@ -5,10 +5,6 @@
 
 package un.breaking.lootBoxes.commands;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.stream.Collectors;
 import org.bukkit.Bukkit;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
@@ -18,6 +14,11 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import un.breaking.lootBoxes.LootCrates;
 import un.breaking.lootBoxes.models.CustomCrate;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.stream.Collectors;
 
 public class LootCrateAdminCommand implements CommandExecutor, TabCompleter {
     private final LootCrates plugin;
@@ -43,6 +44,8 @@ public class LootCrateAdminCommand implements CommandExecutor, TabCompleter {
                 case "edit" -> this.handleEdit(sender);
                 case "list" -> this.handleList(sender);
                 case "reload" -> this.handleReload(sender);
+                case "refresh" -> this.handleRefresh(sender);
+                case "purge" -> this.handlePurge(sender);
                 default -> this.sendHelp(sender);
             }
 
@@ -57,11 +60,22 @@ public class LootCrateAdminCommand implements CommandExecutor, TabCompleter {
         sender.sendMessage(LootCrates.colorize("&e/lcadmin edit &7- Open crate editor GUI"));
         sender.sendMessage(LootCrates.colorize("&e/lcadmin list &7- List all crate types"));
         sender.sendMessage(LootCrates.colorize("&e/lcadmin reload &7- Reload config"));
+        sender.sendMessage(LootCrates.colorize("&e/lcadmin refresh &7- refresh holograms"));
+        sender.sendMessage(LootCrates.colorize("&e/lcadmin purge &7- purge and recreate all holograms"));
         sender.sendMessage(LootCrates.colorize("&7"));
         sender.sendMessage(LootCrates.colorize("&ePlacing Crates:"));
         sender.sendMessage(LootCrates.colorize("&7- Get a crate with /lcadmin give"));
         sender.sendMessage(LootCrates.colorize("&7- Place it as a block to create a crate station"));
         sender.sendMessage(LootCrates.colorize("&7- Holograms and particles will appear!"));
+    }
+
+    private void handleRefresh(CommandSender sender) {
+        if (!sender.hasPermission("lootcrates.admin")) {
+            String prefix = this.plugin.getPrefix();
+            sender.sendMessage(prefix, this.plugin.getMessage("no-permission"));
+        } else {
+            this.plugin.getHologramManager().removeAllHolograms();
+        }
     }
 
     private void handleGive(CommandSender sender, String[] args) {
@@ -89,7 +103,7 @@ public class LootCrateAdminCommand implements CommandExecutor, TabCompleter {
                     if (args.length > 3) {
                         try {
                             amount = Integer.parseInt(args[3]);
-                            amount = Math.max(1, Math.min(amount, 64));
+                            amount = Math.clamp(amount, 1, 64);
                         } catch (NumberFormatException var8) {
                             amount = 1;
                         }
@@ -101,7 +115,7 @@ public class LootCrateAdminCommand implements CommandExecutor, TabCompleter {
                         String var10001 = this.plugin.getPrefix();
                         sender.sendMessage(var10001 + LootCrates.colorize("&ePlayer's inventory was full, dropped on ground."));
                     } else {
-                        target.getInventory().addItem(new ItemStack[]{crateItem});
+                        target.getInventory().addItem(crateItem);
                     }
 
                     String var10 = this.plugin.getPrefix();
@@ -150,7 +164,7 @@ public class LootCrateAdminCommand implements CommandExecutor, TabCompleter {
                         String var10001 = this.plugin.getPrefix();
                         sender.sendMessage(var10001 + LootCrates.colorize("&ePlayer's inventory was full, dropped on ground."));
                     } else {
-                        target.getInventory().addItem(new ItemStack[]{keyItem});
+                        target.getInventory().addItem(keyItem);
                     }
 
                     target.sendMessage(this.plugin.getPrefix() + this.plugin.getMessage("key-received").replace("%amount%", String.valueOf(amount)).replace("%key%", crate.getKeyName()));
@@ -187,6 +201,24 @@ public class LootCrateAdminCommand implements CommandExecutor, TabCompleter {
         }
     }
 
+    private void handlePurge(CommandSender sender) {
+        if (!sender.hasPermission("lootcrates.admin.hollowpurple")) {
+            String var2 = this.plugin.getPrefix();
+            sender.sendMessage(var2 + this.plugin.getMessage("no-permission"));
+        } else {
+            try {
+                sender.sendMessage("Purging Orphans..");
+                this.plugin.getHologramManager().purgeOrphans();
+                this.plugin.getHologramManager().removeAllHolograms();
+                this.plugin.getHologramManager().loadHolograms();
+                sender.sendMessage("Recreated All Holograms!");
+            } catch (Exception e) {
+                sender.sendMessage(LootCrates.colorize("&cError: &e" + e.getMessage()));
+                sender.sendMessage(LootCrates.colorize("&cOperation Failed!"));
+            }
+        }
+    }
+
     private void handleEdit(CommandSender sender) {
         if (sender instanceof Player player) {
             if (!player.hasPermission("lootcrates.admin.edit")) {
@@ -203,15 +235,15 @@ public class LootCrateAdminCommand implements CommandExecutor, TabCompleter {
 
     public List<String> onTabComplete(CommandSender sender, Command command, String alias, String[] args) {
         if (args.length == 1) {
-            return this.filterCompletions(Arrays.asList("help", "give", "givekey", "edit", "list", "reload"), args[0]);
+            return this.filterCompletions(Arrays.asList("help", "give", "givekey", "edit", "list", "reload", "refresh", "purge"), args[0]);
         } else if (args.length != 2 || !args[0].equalsIgnoreCase("give") && !args[0].equalsIgnoreCase("givekey")) {
-            return (List<String>)(args.length != 3 || !args[0].equalsIgnoreCase("give") && !args[0].equalsIgnoreCase("givekey") ? new ArrayList() : this.filterCompletions((List)this.plugin.getCustomCrateManager().getAllCrates().stream().map(CustomCrate::getId).collect(Collectors.toList()), args[2]));
+            return (List<String>)(args.length != 3 || !args[0].equalsIgnoreCase("give") && !args[0].equalsIgnoreCase("givekey") ? new ArrayList() : this.filterCompletions(this.plugin.getCustomCrateManager().getAllCrates().stream().map(CustomCrate::getId).collect(Collectors.toList()), args[2]));
         } else {
-            return this.filterCompletions((List)Bukkit.getOnlinePlayers().stream().map(Player::getName).collect(Collectors.toList()), args[1]);
+            return this.filterCompletions(Bukkit.getOnlinePlayers().stream().map(Player::getName).collect(Collectors.toList()), args[1]);
         }
     }
 
     private List<String> filterCompletions(List<String> completions, String input) {
-        return (List)completions.stream().filter((s) -> s.toLowerCase().startsWith(input.toLowerCase())).collect(Collectors.toList());
+        return completions.stream().filter((s) -> s.toLowerCase().startsWith(input.toLowerCase())).collect(Collectors.toList());
     }
 }
