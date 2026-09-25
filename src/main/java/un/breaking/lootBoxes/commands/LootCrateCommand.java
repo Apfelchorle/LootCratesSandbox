@@ -86,7 +86,6 @@ public class LootCrateCommand implements CommandExecutor, TabCompleter {
             } else {
                 int amount = this.plugin.getConfig().getInt("daily-reward.amount-key", 1);
                 String amount_string = String.valueOf(amount);
-                ItemStack crateItem = crate.createCrateItem(1);
                 ItemStack keyItem = crate.createKeyItem(amount);
                 if (player.getInventory().firstEmpty() == -1) {
                     String var9 = this.plugin.getPrefix();
@@ -99,9 +98,8 @@ public class LootCrateCommand implements CommandExecutor, TabCompleter {
                     player.sendMessage(var10001 + this.plugin.getMessage("daily-claimed"));
                     var10001 = this.plugin.getPrefix();
 //                    player.sendMessage(var10001 + this.plugin.getMessage("crate-received").replace("%crate%", crate.getDisplayName()));
-                    var10001 = this.plugin.getPrefix();
                     String rawmsg = this.plugin.getMessage("key-received").replace("%amount%", amount_string).replace("%key%", crate.getKeyName());
-                    Component coloredmsg = LegacyComponentSerializer.legacySection().deserialize(rawmsg);
+                    Component coloredmsg = LegacyComponentSerializer.legacyAmpersand().deserialize(rawmsg);
                     player.sendMessage(var10001 + coloredmsg);
                 }
             }

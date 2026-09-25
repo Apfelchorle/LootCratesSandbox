@@ -215,6 +215,12 @@ public class HologramManager {
         this.holograms.clear();
     }
 
+    public void purgeHolograms() {
+        purgeOrphans();
+        removeAllHolograms();
+        loadHolograms();
+    }
+
     public Collection<CrateHologram> getAllHolograms() {
         return this.holograms.values();
     }

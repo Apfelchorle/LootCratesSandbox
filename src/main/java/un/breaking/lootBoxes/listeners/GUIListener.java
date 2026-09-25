@@ -9,10 +9,9 @@ import un.breaking.lootBoxes.LootCrates;
 import un.breaking.lootBoxes.animation.AnimationType;
 import un.breaking.lootBoxes.managers.RewardManager;
 import un.breaking.lootBoxes.models.CustomCrate;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+
+import java.util.*;
+
 import org.bukkit.Material;
 import org.bukkit.entity.HumanEntity;
 import org.bukkit.entity.Player;
@@ -29,6 +28,10 @@ public class GUIListener implements Listener {
     private final Map<UUID, WeightEditSession> weightEditSessions = new HashMap();
     private final Map<UUID, ItemStack> pendingNewItems = new HashMap();
 
+    private static final Set<String> animation_names = Set.of(
+            "Create New Crate","Set Weight","&6Edit:","Select Crate to Edit"
+    );
+
     public GUIListener(LootCrates plugin) {
         this.plugin = plugin;
     }
@@ -37,6 +40,7 @@ public class GUIListener implements Listener {
     public void onInventoryClick(InventoryClickEvent event) {
         HumanEntity var3 = event.getWhoClicked();
         if (var3 instanceof Player player) {
+            // if i see you in real life i am gonna fucking kill and rape you
             String title = event.getView().getTitle();
             if (!title.contains("Opening...") && !title.contains("- Classic") && !title.contains("- Slow Reveal") && !title.contains("- Fast Spin") && !title.contains("- Bounce") && !title.contains("- Spiral") && !title.contains("- Pulse") && !title.contains("- Wave") && !title.contains("- Cascade") && !title.contains("- Explosion") && !title.contains("- Vortex") && !title.contains("- Rainbow") && !title.contains("- Meteor") && !title.contains("- Lightning") && !title.contains("- Firework") && !title.contains("- Galaxy") && !title.contains("- Portal") && !title.contains("- Tornado") && !title.contains("- Earthquake") && !title.contains("- Bubble") && !title.contains("- Crystal") && !title.contains("- Phoenix") && !title.contains("- Dragon") && !title.contains("- Mystic") && !title.contains("- Neon") && !title.contains("- Glitch")) {
                 if (title.contains("Select Crate to Edit")) {
